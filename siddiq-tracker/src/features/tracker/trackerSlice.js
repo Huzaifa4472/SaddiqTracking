@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import { getAllTrackerRecords, saveAllTrackerRecords } from '../../utils/storage'
 import { calcDailyScore } from '../../utils/scoring'
 import { emptyHabitsObject } from '../../utils/habits'
@@ -10,39 +10,40 @@ const initialState = {
   searchDate: '',
 }
 
-export const loadRecordsForUser = createAsyncThunk('tracker/loadRecordsForUser', async (userId) => {
-  const all = await getAllTrackerRecords()
-  return all.filter((r) => r.userId === userId)
-})
-
-export const upsertRecord = createAsyncThunk(
-  'tracker/upsertRecord',
-  async ({ userId, date, habits, notes }) => {
-    const all = await getAllTrackerRecords()
-    const idx = all.findIndex((r) => r.userId === userId && r.date === date)
-    const mergedHabits = { ...emptyHabitsObject(), ...habits }
-    const dailyScore = calcDailyScore(mergedHabits)
-    const record = { userId, date, habits: mergedHabits, notes: notes || '', dailyScore }
-    if (idx === -1) {
-      all.push(record)
-    } else {
-      all[idx] = record
-    }
-    await saveAllTrackerRecords(all)
-    return all.filter((r) => r.userId === userId)
-  }
-)
-
-export const deleteRecord = createAsyncThunk('tracker/deleteRecord', async ({ userId, date }) => {
-  const all = (await getAllTrackerRecords()).filter((r) => !(r.userId === userId && r.date === date))
-  await saveAllTrackerRecords(all)
-  return all.filter((r) => r.userId === userId)
-})
+function persist(allRecords) {
+  saveAllTrackerRecords(allRecords)
+}
 
 const trackerSlice = createSlice({
   name: 'tracker',
   initialState,
   reducers: {
+    loadRecordsForUser: (state, action) => {
+      const userId = action.payload
+      const all = getAllTrackerRecords()
+      state.records = all.filter((r) => r.userId === userId)
+    },
+    upsertRecord: (state, action) => {
+      const { userId, date, habits, notes } = action.payload
+      const all = getAllTrackerRecords()
+      const idx = all.findIndex((r) => r.userId === userId && r.date === date)
+      const mergedHabits = { ...emptyHabitsObject(), ...habits }
+      const dailyScore = calcDailyScore(mergedHabits)
+      const record = { userId, date, habits: mergedHabits, notes: notes || '', dailyScore }
+      if (idx === -1) {
+        all.push(record)
+      } else {
+        all[idx] = record
+      }
+      persist(all)
+      state.records = all.filter((r) => r.userId === userId)
+    },
+    deleteRecord: (state, action) => {
+      const { userId, date } = action.payload
+      const all = getAllTrackerRecords().filter((r) => !(r.userId === userId && r.date === date))
+      persist(all)
+      state.records = all.filter((r) => r.userId === userId)
+    },
     setFilterRange: (state, action) => {
       state.filterStart = action.payload.start
       state.filterEnd = action.payload.end
@@ -56,21 +57,10 @@ const trackerSlice = createSlice({
       state.searchDate = ''
     },
   },
-  extraReducers: (builder) => {
-    builder
-      .addCase(loadRecordsForUser.fulfilled, (state, action) => {
-        state.records = action.payload
-      })
-      .addCase(upsertRecord.fulfilled, (state, action) => {
-        state.records = action.payload
-      })
-      .addCase(deleteRecord.fulfilled, (state, action) => {
-        state.records = action.payload
-      })
-  },
 })
 
-export const { setFilterRange, setSearchDate, clearFilters } = trackerSlice.actions
+export const { loadRecordsForUser, upsertRecord, deleteRecord, setFilterRange, setSearchDate, clearFilters } =
+  trackerSlice.actions
 export default trackerSlice.reducer
 
 // Selectors
