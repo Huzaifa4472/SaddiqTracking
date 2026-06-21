@@ -8,12 +8,18 @@ Vite + React 18 + Redux Toolkit + React Router + Tailwind CSS + Recharts.
 
 ## Getting started
 
+This project's `dev` script runs `vercel dev`, which serves both the Vite frontend and the
+`api/` serverless functions together (Vite alone can't run the API routes).
+
 ```bash
 npm install
+npm i -g vercel        # if you don't already have the Vercel CLI
+vercel link            # link this folder to a Vercel project (one-time)
+vercel env pull .env.local   # pulls KV_REST_API_URL / KV_REST_API_TOKEN, etc.
 npm run dev
 ```
 
-Then open the printed local URL (usually http://localhost:5173).
+Then open the printed local URL (usually http://localhost:3000).
 
 To build for production:
 
@@ -24,15 +30,22 @@ npm run preview
 
 ## Data storage
 
-This is a frontend-only app (no backend server). Per the spec, data is modeled exactly like
-`src/data/users.json` and `src/data/tracker-data.json`, but since a browser app cannot write to
-files on disk, the actual persistence layer is `src/utils/storage.js`, which mirrors that same
-JSON shape into `localStorage`. This keeps the data model identical to real files, so the storage
-module is a drop-in spot to later swap in real file I/O or a backend API — nothing else in the
-app needs to change.
+Users and tracker records are persisted server-side in a **Vercel KV** (Upstash Redis) database,
+behind two serverless functions: `api/users.js` and `api/tracker.js`. The frontend talks to them
+over `fetch` via `src/utils/storage.js`, so the rest of the app (Redux slices, pages) never touches
+storage directly.
 
-Data lives entirely in your browser. Clearing site data/localStorage will erase it — use
-**Profile → Export Data (JSON Backup)** regularly.
+To enable this on Vercel:
+1. In your Vercel project dashboard, open **Storage** → add a KV (Upstash for Redis) database and
+   connect it to this project. Vercel injects `KV_REST_API_URL` / `KV_REST_API_TOKEN` automatically.
+2. Locally, run `vercel link` then `vercel env pull .env.local` once to get the same credentials.
+3. `src/data/users.json` and `src/data/tracker-data.json` are only used as the initial seed the
+   first time each API route runs (before any data exists in KV) — after that, KV is the source of
+   truth and those files are no longer written to.
+
+The current session (which user is logged into this browser) is still kept in `localStorage`,
+since it's just a per-device pointer, not user data — clearing it just logs you out locally,
+it doesn't delete any account or tracker data.
 
 ## Features implemented
 

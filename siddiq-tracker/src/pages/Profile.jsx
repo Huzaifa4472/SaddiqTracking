@@ -41,8 +41,8 @@ export default function Profile() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [error, successMessage])
 
-  function handleExportJSON() {
-    const blob = new Blob([exportAllDataAsJSON()], { type: 'application/json' })
+  async function handleExportJSON() {
+    const blob = new Blob([await exportAllDataAsJSON()], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
