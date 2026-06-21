@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .card {
+    @apply bg-white dark:bg-slate-800 rounded-2xl shadow-card dark:shadow-cardDark p-5 transition-colors duration-200;
+  }
+  .btn-primary {
+    @apply px-4 py-2.5 rounded-xl font-semibold text-white bg-siddiq-green hover:bg-siddiq-greenLight transition-colors duration-150 disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply px-4 py-2.5 rounded-xl font-semibold text-siddiq-green dark:text-siddiq-goldLight border border-siddiq-green/30 dark:border-siddiq-gold/40 hover:bg-siddiq-green/5 dark:hover:bg-white/5 transition-colors duration-150;
+  }
+  .input-field {
+    @apply w-full rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-siddiq-green/40 dark:text-slate-100;
+  }
+  .label {
+    @apply block text-sm font-medium text-slate-600 dark:text-slate-300 mb-1.5;
+  }
+  .habit-pill {
+    @apply flex items-center justify-between gap-2 rounded-xl px-3 py-2.5 text-sm cursor-pointer select-none border transition-colors duration-150;
+  }
+  .habit-pill-done {
+    @apply bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-900/30 dark:border-emerald-600 dark:text-emerald-300;
+  }
+  .habit-pill-missed {
+    @apply bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-900/20 dark:border-rose-700/60 dark:text-rose-300;
+  }
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgba(15, 81, 50, 0.25); border-radius: 8px; }
